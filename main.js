@@ -11,8 +11,28 @@ const onReady = (fn) => {
 onReady(() => {
 	const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
 
+	const getGitHubPagesBasePath = () => {
+		const isGitHubPages = location.hostname.endsWith("github.io");
+		if (!isGitHubPages) return "";
+		const firstPathSegment = location.pathname.split("/").filter(Boolean)[0];
+		return firstPathSegment ? `/${firstPathSegment}` : "";
+	};
+
+	const prefixRootRelativeLinks = () => {
+		const basePath = getGitHubPagesBasePath();
+		if (!basePath) return;
+		for (const anchor of document.querySelectorAll('a[href^="/"]')) {
+			const href = anchor.getAttribute("href");
+			if (!href) continue;
+			if (href === basePath || href.startsWith(`${basePath}/`)) continue;
+			anchor.setAttribute("href", `${basePath}${href}`);
+		}
+	};
+
 	const year = document.getElementById("year");
 	if (year) year.textContent = String(new Date().getFullYear());
+
+	prefixRootRelativeLinks();
 
 	// Scroll reveal choreography
 	const revealItems = Array.from(document.querySelectorAll("[data-reveal]"));
