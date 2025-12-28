@@ -31,7 +31,9 @@
 				const firstPathSegment = location.pathname.split('/').filter(Boolean)[0];
 				const basePath = isGitHubPages && firstPathSegment ? `/${firstPathSegment}` : '';
 				const href = `${basePath}/styles.elite.css`;
+				const icon = `${basePath}/favicon.svg`;
 				document.write(`<link rel="stylesheet" href="${href}" />`);
+				document.write(`<link rel="icon" href="${icon}" type="image/svg+xml" />`);
 			})();
 		</script>
 	</head>
@@ -320,6 +322,16 @@
 			</div>
 		</footer>
 
-		<script src="/main.js" defer></script>
+		<script>
+			(() => {
+				const isGitHubPages = location.hostname.endsWith('github.io');
+				const firstPathSegment = location.pathname.split('/').filter(Boolean)[0];
+				const basePath = isGitHubPages && firstPathSegment ? `/${firstPathSegment}` : '';
+				const script = document.createElement('script');
+				script.src = `${basePath}/main.js`;
+				script.defer = true;
+				document.body.appendChild(script);
+			})();
+		</script>
 	</body>
 </html>
