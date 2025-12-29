@@ -90,6 +90,17 @@ onReady(() => {
 	const root = document.documentElement;
 	let px = 0;
 	let py = 0;
+	let pointerRaf = 0;
+
+	const applyPointerParallax = () => {
+		pointerRaf = 0;
+		if (mesh) {
+			mesh.style.transform = `translate3d(${px * -14}px, ${py * -12}px, 0)`;
+		}
+		if (orbs) {
+			orbs.style.transform = `translate3d(${px * 12}px, ${py * 10}px, 0)`;
+		}
+	};
 
 	const onMove = (event) => {
 		const x = event.clientX / window.innerWidth - 0.5;
@@ -101,22 +112,14 @@ onReady(() => {
 		const sy = (event.clientY / window.innerHeight) * 100;
 		root.style.setProperty("--sx", `${sx}%`);
 		root.style.setProperty("--sy", `${sy}%`);
+
+		if (!prefersReducedMotion && !pointerRaf) {
+			pointerRaf = requestAnimationFrame(applyPointerParallax);
+		}
 	};
 
 	window.addEventListener("pointermove", onMove, { passive: true });
-
-	if (!prefersReducedMotion) {
-		const tick = () => {
-			if (mesh) {
-				mesh.style.transform = `translate3d(${px * -14}px, ${py * -12}px, 0)`;
-			}
-			if (orbs) {
-				orbs.style.transform = `translate3d(${px * 12}px, ${py * 10}px, 0)`;
-			}
-			requestAnimationFrame(tick);
-		};
-		requestAnimationFrame(tick);
-	}
+	if (!prefersReducedMotion) applyPointerParallax();
 
 	// Scroll progress + scroll-speed blur
 	let targetProgress = 0;
@@ -130,6 +133,24 @@ onReady(() => {
 	let smoothHeroSkew = -5;
 
 	const parallaxItems = Array.from(document.querySelectorAll("[data-parallax]"));
+	let parallaxRaf = 0;
+	const updateParallax = () => {
+		parallaxRaf = 0;
+		for (const el of parallaxItems) {
+			const factor = Number(el.getAttribute("data-parallax") || "0") || 0;
+			if (factor <= 0) continue;
+			const r = el.getBoundingClientRect();
+			const center = r.top + r.height / 2;
+			const dist = (center - window.innerHeight / 2) / window.innerHeight;
+			const px = clamp(-dist * factor * 110, -34, 34);
+			el.style.setProperty("--parY", `${px.toFixed(2)}px`);
+		}
+	};
+	const requestParallax = () => {
+		if (prefersReducedMotion) return;
+		if (parallaxRaf) return;
+		parallaxRaf = requestAnimationFrame(updateParallax);
+	};
 
 	const onScroll = () => {
 		const doc = document.documentElement;
@@ -144,12 +165,16 @@ onReady(() => {
 		const heroDrift = clamp(window.scrollY / window.innerHeight, 0, 1.4);
 		targetHeroY = heroDrift * 22;
 		targetHeroSkew = clamp(-6 + heroDrift * 6, -6, 1);
+		requestParallax();
 	};
 	window.addEventListener("scroll", onScroll, { passive: true });
+	window.addEventListener("resize", requestParallax, { passive: true });
 	onScroll();
 
 	if (!prefersReducedMotion) {
+		let scrollRaf = 0;
 		const scrollTick = () => {
+			scrollRaf = 0;
 			smoothProgress += (targetProgress - smoothProgress) * 0.08;
 			smoothBlurPx += (targetBlurPx - smoothBlurPx) * 0.12;
 			smoothHeroY += (targetHeroY - smoothHeroY) * 0.10;
@@ -159,20 +184,21 @@ onReady(() => {
 			root.style.setProperty("--heroWordmarkY", `${smoothHeroY.toFixed(2)}px`);
 			root.style.setProperty("--heroWordmarkSkew", `${smoothHeroSkew.toFixed(2)}deg`);
 
-			// Per-element parallax (keeps layout minimal, makes motion rich)
-			for (const el of parallaxItems) {
-				const factor = Number(el.getAttribute("data-parallax") || "0") || 0;
-				if (factor <= 0) continue;
-				const r = el.getBoundingClientRect();
-				const center = r.top + r.height / 2;
-				const dist = (center - window.innerHeight / 2) / window.innerHeight;
-				const px = clamp(-dist * factor * 110, -34, 34);
-				el.style.setProperty("--parY", `${px.toFixed(2)}px`);
+			const stillAnimating =
+				Math.abs(targetProgress - smoothProgress) > 0.0006 ||
+				Math.abs(targetBlurPx - smoothBlurPx) > 0.02 ||
+				Math.abs(targetHeroY - smoothHeroY) > 0.02 ||
+				Math.abs(targetHeroSkew - smoothHeroSkew) > 0.02;
+			if (stillAnimating) {
+				scrollRaf = requestAnimationFrame(scrollTick);
 			}
-
-			requestAnimationFrame(scrollTick);
 		};
-		requestAnimationFrame(scrollTick);
+		const requestScrollTick = () => {
+			if (scrollRaf) return;
+			scrollRaf = requestAnimationFrame(scrollTick);
+		};
+		window.addEventListener("scroll", requestScrollTick, { passive: true });
+		requestScrollTick();
 	} else {
 		root.style.setProperty("--scroll", String(targetProgress));
 		root.style.setProperty("--scrollBlur", "0px");
@@ -219,11 +245,13 @@ onReady(() => {
 			let my = 0;
 			let tx = 0;
 			let ty = 0;
+			let magRaf = 0;
 
 			const onMagMove = (e) => {
 				const r = el.getBoundingClientRect();
 				mx = (e.clientX - (r.left + r.width / 2)) / r.width;
 				my = (e.clientY - (r.top + r.height / 2)) / r.height;
+				if (!magRaf) magRaf = requestAnimationFrame(magTick);
 			};
 
 			el.addEventListener("pointermove", onMagMove, { passive: true });
@@ -232,18 +260,23 @@ onReady(() => {
 				() => {
 					mx = 0;
 					my = 0;
+					if (!magRaf) magRaf = requestAnimationFrame(magTick);
 				},
 				{ passive: true }
 			);
 
 			const magTick = () => {
+				magRaf = 0;
 				tx += (mx - tx) * 0.14;
 				ty += (my - ty) * 0.14;
 				el.style.setProperty("--magX", `${(tx * 10).toFixed(2)}px`);
 				el.style.setProperty("--magY", `${(ty * 8).toFixed(2)}px`);
-				requestAnimationFrame(magTick);
+
+				const stillAnimating = Math.abs(mx - tx) > 0.002 || Math.abs(my - ty) > 0.002;
+				if (stillAnimating) {
+					magRaf = requestAnimationFrame(magTick);
+				}
 			};
-			requestAnimationFrame(magTick);
 		});
 	}
 
@@ -254,11 +287,13 @@ onReady(() => {
 		let ty = 0;
 		let cx = 0;
 		let cy = 0;
+		let tiltRaf = 0;
 
 		const onTiltMove = (e) => {
 			const r = tiltTarget.getBoundingClientRect();
 			cx = (e.clientX - r.left) / r.width - 0.5;
 			cy = (e.clientY - r.top) / r.height - 0.5;
+			if (!prefersReducedMotion && !tiltRaf) tiltRaf = requestAnimationFrame(tiltTick);
 		};
 
 		tiltTarget.addEventListener("pointermove", onTiltMove, { passive: true });
@@ -267,18 +302,23 @@ onReady(() => {
 			() => {
 				cx = 0;
 				cy = 0;
+				if (!prefersReducedMotion && !tiltRaf) tiltRaf = requestAnimationFrame(tiltTick);
 			},
 			{ passive: true }
 		);
 
 		const tiltTick = () => {
+			tiltRaf = 0;
 			tx += (cx - tx) * 0.08;
 			ty += (cy - ty) * 0.08;
 			const rx = clamp(ty * -10, -10, 10);
 			const ry = clamp(tx * 12, -12, 12);
 			tiltTarget.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`;
-			requestAnimationFrame(tiltTick);
+
+			const stillAnimating = Math.abs(cx - tx) > 0.002 || Math.abs(cy - ty) > 0.002;
+			if (stillAnimating) {
+				tiltRaf = requestAnimationFrame(tiltTick);
+			}
 		};
-		requestAnimationFrame(tiltTick);
 	}
 });
