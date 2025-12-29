@@ -8,6 +8,15 @@ const onReady = (fn) => {
 	fn();
 };
 
+const onIdle = (fn, { timeout = 1200 } = {}) => {
+	if (typeof window === "undefined") return;
+	if ("requestIdleCallback" in window) {
+		window.requestIdleCallback(fn, { timeout });
+		return;
+	}
+	setTimeout(fn, 0);
+};
+
 onReady(() => {
 	const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
 
@@ -84,42 +93,44 @@ onReady(() => {
 		history.pushState(null, "", href);
 	});
 
-	// Pointer spotlight + micro parallax
-	const mesh = document.querySelector(".bg__mesh");
-	const orbs = document.querySelector(".bg__orbs");
 	const root = document.documentElement;
-	let px = 0;
-	let py = 0;
-	let pointerRaf = 0;
+	// Pointer spotlight + micro parallax (defer heavy transforms to idle)
+	onIdle(() => {
+		const mesh = document.querySelector(".bg__mesh");
+		const orbs = document.querySelector(".bg__orbs");
+		let px = 0;
+		let py = 0;
+		let pointerRaf = 0;
 
-	const applyPointerParallax = () => {
-		pointerRaf = 0;
-		if (mesh) {
-			mesh.style.transform = `translate3d(${px * -14}px, ${py * -12}px, 0)`;
-		}
-		if (orbs) {
-			orbs.style.transform = `translate3d(${px * 12}px, ${py * 10}px, 0)`;
-		}
-	};
+		const applyPointerParallax = () => {
+			pointerRaf = 0;
+			if (mesh) {
+				mesh.style.transform = `translate3d(${px * -14}px, ${py * -12}px, 0)`;
+			}
+			if (orbs) {
+				orbs.style.transform = `translate3d(${px * 12}px, ${py * 10}px, 0)`;
+			}
+		};
 
-	const onMove = (event) => {
-		const x = event.clientX / window.innerWidth - 0.5;
-		const y = event.clientY / window.innerHeight - 0.5;
-		px = x;
-		py = y;
+		const onMove = (event) => {
+			const x = event.clientX / window.innerWidth - 0.5;
+			const y = event.clientY / window.innerHeight - 0.5;
+			px = x;
+			py = y;
 
-		const sx = (event.clientX / window.innerWidth) * 100;
-		const sy = (event.clientY / window.innerHeight) * 100;
-		root.style.setProperty("--sx", `${sx}%`);
-		root.style.setProperty("--sy", `${sy}%`);
+			const sx = (event.clientX / window.innerWidth) * 100;
+			const sy = (event.clientY / window.innerHeight) * 100;
+			root.style.setProperty("--sx", `${sx}%`);
+			root.style.setProperty("--sy", `${sy}%`);
 
-		if (!prefersReducedMotion && !pointerRaf) {
-			pointerRaf = requestAnimationFrame(applyPointerParallax);
-		}
-	};
+			if (!prefersReducedMotion && !pointerRaf) {
+				pointerRaf = requestAnimationFrame(applyPointerParallax);
+			}
+		};
 
-	window.addEventListener("pointermove", onMove, { passive: true });
-	if (!prefersReducedMotion) applyPointerParallax();
+		window.addEventListener("pointermove", onMove, { passive: true });
+		if (!prefersReducedMotion) applyPointerParallax();
+	});
 
 	// Scroll progress + scroll-speed blur
 	let targetProgress = 0;
@@ -206,119 +217,122 @@ onReady(() => {
 		root.style.setProperty("--heroWordmarkSkew", `${targetHeroSkew.toFixed(2)}deg`);
 	}
 
-	// Card hotspot gradient follows cursor
-	const cards = Array.from(document.querySelectorAll(".card"));
-	cards.forEach((card) => {
-		card.addEventListener(
-			"pointermove",
-			(e) => {
-				const rect = card.getBoundingClientRect();
-				const mx = ((e.clientX - rect.left) / rect.width) * 100;
-				const my = ((e.clientY - rect.top) / rect.height) * 100;
-				card.style.setProperty("--mx", `${mx}%`);
-				card.style.setProperty("--my", `${my}%`);
+	// Hover/pointer effects (defer to idle to reduce initial load work)
+	onIdle(() => {
+		// Card hotspot gradient follows cursor
+		const cards = Array.from(document.querySelectorAll(".card"));
+		cards.forEach((card) => {
+			card.addEventListener(
+				"pointermove",
+				(e) => {
+					const rect = card.getBoundingClientRect();
+					const mx = ((e.clientX - rect.left) / rect.width) * 100;
+					const my = ((e.clientY - rect.top) / rect.height) * 100;
+					card.style.setProperty("--mx", `${mx}%`);
+					card.style.setProperty("--my", `${my}%`);
 
-				if (!prefersReducedMotion) {
-					const cx = (e.clientX - (rect.left + rect.width / 2)) / rect.width;
-					const cy = (e.clientY - (rect.top + rect.height / 2)) / rect.height;
-					card.style.setProperty("--ry", `${clamp(cx * 10, -10, 10)}deg`);
-					card.style.setProperty("--rx", `${clamp(cy * -8, -8, 8)}deg`);
-				}
-			},
-			{ passive: true }
-		);
-		card.addEventListener(
-			"pointerleave",
-			() => {
-				card.style.setProperty("--rx", "0deg");
-				card.style.setProperty("--ry", "0deg");
-			},
-			{ passive: true }
-		);
-	});
-
-	// Magnetic buttons
-	const magnetic = Array.from(document.querySelectorAll("[data-magnetic]"));
-	if (!prefersReducedMotion) {
-		magnetic.forEach((el) => {
-			let mx = 0;
-			let my = 0;
-			let tx = 0;
-			let ty = 0;
-			let magRaf = 0;
-
-			const onMagMove = (e) => {
-				const r = el.getBoundingClientRect();
-				mx = (e.clientX - (r.left + r.width / 2)) / r.width;
-				my = (e.clientY - (r.top + r.height / 2)) / r.height;
-				if (!magRaf) magRaf = requestAnimationFrame(magTick);
-			};
-
-			el.addEventListener("pointermove", onMagMove, { passive: true });
-			el.addEventListener(
-				"pointerleave",
-				() => {
-					mx = 0;
-					my = 0;
-					if (!magRaf) magRaf = requestAnimationFrame(magTick);
+					if (!prefersReducedMotion) {
+						const cx = (e.clientX - (rect.left + rect.width / 2)) / rect.width;
+						const cy = (e.clientY - (rect.top + rect.height / 2)) / rect.height;
+						card.style.setProperty("--ry", `${clamp(cx * 10, -10, 10)}deg`);
+						card.style.setProperty("--rx", `${clamp(cy * -8, -8, 8)}deg`);
+					}
 				},
 				{ passive: true }
 			);
+			card.addEventListener(
+				"pointerleave",
+				() => {
+					card.style.setProperty("--rx", "0deg");
+					card.style.setProperty("--ry", "0deg");
+				},
+				{ passive: true }
+			);
+		});
 
-			const magTick = () => {
-				magRaf = 0;
-				tx += (mx - tx) * 0.14;
-				ty += (my - ty) * 0.14;
-				el.style.setProperty("--magX", `${(tx * 10).toFixed(2)}px`);
-				el.style.setProperty("--magY", `${(ty * 8).toFixed(2)}px`);
+		// Magnetic buttons
+		const magnetic = Array.from(document.querySelectorAll("[data-magnetic]"));
+		if (!prefersReducedMotion) {
+			magnetic.forEach((el) => {
+				let mx = 0;
+				let my = 0;
+				let tx = 0;
+				let ty = 0;
+				let magRaf = 0;
 
-				const stillAnimating = Math.abs(mx - tx) > 0.002 || Math.abs(my - ty) > 0.002;
+				const magTick = () => {
+					magRaf = 0;
+					tx += (mx - tx) * 0.14;
+					ty += (my - ty) * 0.14;
+					el.style.setProperty("--magX", `${(tx * 10).toFixed(2)}px`);
+					el.style.setProperty("--magY", `${(ty * 8).toFixed(2)}px`);
+
+					const stillAnimating = Math.abs(mx - tx) > 0.002 || Math.abs(my - ty) > 0.002;
+					if (stillAnimating) {
+						magRaf = requestAnimationFrame(magTick);
+					}
+				};
+
+				const onMagMove = (e) => {
+					const r = el.getBoundingClientRect();
+					mx = (e.clientX - (r.left + r.width / 2)) / r.width;
+					my = (e.clientY - (r.top + r.height / 2)) / r.height;
+					if (!magRaf) magRaf = requestAnimationFrame(magTick);
+				};
+
+				el.addEventListener("pointermove", onMagMove, { passive: true });
+				el.addEventListener(
+					"pointerleave",
+					() => {
+						mx = 0;
+						my = 0;
+						if (!magRaf) magRaf = requestAnimationFrame(magTick);
+					},
+					{ passive: true }
+				);
+			});
+		}
+
+		// Subtle tilt on the hero panel
+		const tiltTarget = document.querySelector("[data-tilt]");
+		if (tiltTarget) {
+			let tx = 0;
+			let ty = 0;
+			let cx = 0;
+			let cy = 0;
+			let tiltRaf = 0;
+
+			const tiltTick = () => {
+				tiltRaf = 0;
+				tx += (cx - tx) * 0.08;
+				ty += (cy - ty) * 0.08;
+				const rx = clamp(ty * -10, -10, 10);
+				const ry = clamp(tx * 12, -12, 12);
+				tiltTarget.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+
+				const stillAnimating = Math.abs(cx - tx) > 0.002 || Math.abs(cy - ty) > 0.002;
 				if (stillAnimating) {
-					magRaf = requestAnimationFrame(magTick);
+					tiltRaf = requestAnimationFrame(tiltTick);
 				}
 			};
-		});
-	}
 
-	// Subtle tilt on the hero panel
-	const tiltTarget = document.querySelector("[data-tilt]");
-	if (tiltTarget) {
-		let tx = 0;
-		let ty = 0;
-		let cx = 0;
-		let cy = 0;
-		let tiltRaf = 0;
-
-		const onTiltMove = (e) => {
-			const r = tiltTarget.getBoundingClientRect();
-			cx = (e.clientX - r.left) / r.width - 0.5;
-			cy = (e.clientY - r.top) / r.height - 0.5;
-			if (!prefersReducedMotion && !tiltRaf) tiltRaf = requestAnimationFrame(tiltTick);
-		};
-
-		tiltTarget.addEventListener("pointermove", onTiltMove, { passive: true });
-		tiltTarget.addEventListener(
-			"pointerleave",
-			() => {
-				cx = 0;
-				cy = 0;
+			const onTiltMove = (e) => {
+				const r = tiltTarget.getBoundingClientRect();
+				cx = (e.clientX - r.left) / r.width - 0.5;
+				cy = (e.clientY - r.top) / r.height - 0.5;
 				if (!prefersReducedMotion && !tiltRaf) tiltRaf = requestAnimationFrame(tiltTick);
-			},
-			{ passive: true }
-		);
+			};
 
-		const tiltTick = () => {
-			tiltRaf = 0;
-			tx += (cx - tx) * 0.08;
-			ty += (cy - ty) * 0.08;
-			const rx = clamp(ty * -10, -10, 10);
-			const ry = clamp(tx * 12, -12, 12);
-			tiltTarget.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`;
-
-			const stillAnimating = Math.abs(cx - tx) > 0.002 || Math.abs(cy - ty) > 0.002;
-			if (stillAnimating) {
-				tiltRaf = requestAnimationFrame(tiltTick);
-			}
-		};
-	}
+			tiltTarget.addEventListener("pointermove", onTiltMove, { passive: true });
+			tiltTarget.addEventListener(
+				"pointerleave",
+				() => {
+					cx = 0;
+					cy = 0;
+					if (!prefersReducedMotion && !tiltRaf) tiltRaf = requestAnimationFrame(tiltTick);
+				},
+				{ passive: true }
+			);
+		}
+	});
 });
