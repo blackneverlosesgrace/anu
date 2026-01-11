@@ -23,6 +23,9 @@ onReady(() => {
 	const isTouchDevice =
 		("ontouchstart" in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
 	if (isTouchDevice) {
+		let lastTouchEnd = 0;
+		const doubleTapWindowMs = 320;
+
 		const shouldAllowGestureTarget = (target) => {
 			if (!(target instanceof Element)) return false;
 			return Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
@@ -34,6 +37,30 @@ onReady(() => {
 				if (e.touches && e.touches.length > 1 && !shouldAllowGestureTarget(e.target)) {
 					e.preventDefault();
 				}
+			},
+			{ passive: false }
+		);
+
+		document.addEventListener(
+			"touchmove",
+			(e) => {
+				if (e.touches && e.touches.length > 1 && !shouldAllowGestureTarget(e.target)) {
+					e.preventDefault();
+				}
+			},
+			{ passive: false }
+		);
+
+		// Block double-tap to zoom
+		document.addEventListener(
+			"touchend",
+			(e) => {
+				if (shouldAllowGestureTarget(e.target)) return;
+				const now = Date.now();
+				if (now - lastTouchEnd <= doubleTapWindowMs) {
+					e.preventDefault();
+				}
+				lastTouchEnd = now;
 			},
 			{ passive: false }
 		);
@@ -108,6 +135,7 @@ onReady(() => {
 	if (year) year.textContent = String(new Date().getFullYear());
 
 	const topBar = document.querySelector(".top");
+	let topBarLastY = window.scrollY;
 
 	prefixRootRelativeLinks();
 
@@ -307,8 +335,18 @@ onReady(() => {
 		scrollRaf = 0;
 
 		if (topBar) {
-			// Hide immediately on any scroll away from the very top.
-			topBar.classList.toggle("is-hidden", window.scrollY > 0);
+			const y = window.scrollY;
+			const delta = y - topBarLastY;
+			topBarLastY = y;
+
+			// Fade away while scrolling down; reappear when scrolling up or at top.
+			if (y <= 0) {
+				topBar.classList.remove("is-hidden");
+			} else if (delta > 0) {
+				topBar.classList.add("is-hidden");
+			} else if (delta < 0) {
+				topBar.classList.remove("is-hidden");
+			}
 		}
 
 		const doc = document.documentElement;

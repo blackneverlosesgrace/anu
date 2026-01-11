@@ -52,11 +52,13 @@ body {
 
 html {
 	scroll-behavior: smooth;
+	touch-action: pan-x pan-y;
 }
 
 body {
 	margin: 0;
 	color: var(--ink);
+	touch-action: pan-x pan-y;
 	background:
 		radial-gradient(1200px 900px at 55% -10%, rgba(124, 58, 237, 0.14), transparent 60%),
 		radial-gradient(900px 700px at 12% 12%, rgba(34, 211, 238, 0.10), transparent 60%),
