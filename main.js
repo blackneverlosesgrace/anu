@@ -24,11 +24,15 @@ onReady(() => {
 		("ontouchstart" in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
 	if (isTouchDevice) {
 		let lastTouchEnd = 0;
-		const doubleTapWindowMs = 320;
+		const doubleTapWindowMs = 340;
 
 		const shouldAllowGestureTarget = (target) => {
 			if (!(target instanceof Element)) return false;
-			return Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
+			return Boolean(
+				target.closest(
+					"input, textarea, select, [contenteditable='true']"
+				)
+			);
 		};
 
 		document.addEventListener(
@@ -51,7 +55,7 @@ onReady(() => {
 			{ passive: false }
 		);
 
-		// Block double-tap to zoom
+		// Block double-tap to zoom except on form controls
 		document.addEventListener(
 			"touchend",
 			(e) => {

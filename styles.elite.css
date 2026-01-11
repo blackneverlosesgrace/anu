@@ -70,6 +70,14 @@ body {
 	-webkit-text-size-adjust: 100%;
 }
 
+/* Prefer 'manipulation' where supported to disable double-tap zoom */
+@supports (touch-action: manipulation) {
+	html,
+	body {
+		touch-action: manipulation;
+	}
+}
+
 ::selection {
 	background: rgba(124, 58, 237, 0.30);
 }
