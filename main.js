@@ -75,6 +75,8 @@ onReady(() => {
 	const year = document.getElementById("year");
 	if (year) year.textContent = String(new Date().getFullYear());
 
+	const topBar = document.querySelector(".top");
+
 	prefixRootRelativeLinks();
 
 	// Lite mode toggle (injected into header so all pages get it)
@@ -271,6 +273,12 @@ onReady(() => {
 	let scrollRaf = 0;
 	const updateScrollVars = () => {
 		scrollRaf = 0;
+
+		if (topBar) {
+			// Hide immediately on any scroll away from the very top.
+			topBar.classList.toggle("is-hidden", window.scrollY > 0);
+		}
+
 		const doc = document.documentElement;
 		const max = Math.max(1, doc.scrollHeight - window.innerHeight);
 		const progress = window.scrollY / max;
