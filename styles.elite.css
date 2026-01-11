@@ -220,8 +220,8 @@ a {
 	position: sticky;
 	top: 0;
 	z-index: 80;
-	max-height: 96px;
-	overflow: clip;
+	max-height: 320px;
+	overflow: hidden;
 	backdrop-filter: blur(calc(var(--blur) + 10px));
 	-webkit-backdrop-filter: blur(calc(var(--blur) + 10px));
 	background: linear-gradient(180deg, rgba(5, 6, 14, 0.78), rgba(5, 6, 14, 0.30));
