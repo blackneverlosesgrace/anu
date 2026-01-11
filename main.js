@@ -18,6 +18,38 @@ const onIdle = (fn, { timeout = 1200 } = {}) => {
 };
 
 onReady(() => {
+	// Lock pinch/zoom on touch devices (backup to viewport settings).
+	// Note: This reduces accessibility for users who rely on zoom.
+	const isTouchDevice =
+		("ontouchstart" in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
+	if (isTouchDevice) {
+		const shouldAllowGestureTarget = (target) => {
+			if (!(target instanceof Element)) return false;
+			return Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
+		};
+
+		document.addEventListener(
+			"touchstart",
+			(e) => {
+				if (e.touches && e.touches.length > 1 && !shouldAllowGestureTarget(e.target)) {
+					e.preventDefault();
+				}
+			},
+			{ passive: false }
+		);
+
+		// iOS Safari gesture events
+		for (const name of ["gesturestart", "gesturechange", "gestureend"]) {
+			document.addEventListener(
+				name,
+				(e) => {
+					if (!shouldAllowGestureTarget(e.target)) e.preventDefault();
+				},
+				{ passive: false }
+			);
+		}
+	}
+
 	const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
 	const getStoredLitePreference = () => {
 		try {
