@@ -135,6 +135,83 @@ onReady(() => {
 		}
 	};
 
+	// ---- Feeds rendering ----
+	const loadFeedsConfig = async () => {
+		try {
+			const basePath = getGitHubPagesBasePath();
+			const res = await fetch(`${basePath}/data/feeds.json`, { cache: "no-store" });
+			if (!res.ok) return null;
+			return await res.json();
+		} catch {
+			return null;
+		}
+	};
+
+	const instagramEmbedSrcFromUrl = (url) => {
+		try {
+			const u = new URL(url);
+			const parts = u.pathname.split("/").filter(Boolean);
+			if (parts.length >= 2) {
+				const type = parts[0];
+				const code = parts[1];
+				if (["p", "reel", "tv"].includes(type) && code) {
+					return `https://www.instagram.com/${type}/${code}/embed`;
+				}
+			}
+		} catch {}
+		return null;
+	};
+
+	const renderLinkedIn = (container, embedSrcs = []) => {
+		if (!container) return;
+		const grid = container.querySelector(".feed-grid");
+		if (!grid) return;
+		for (const src of embedSrcs) {
+			if (!src) continue;
+			const frame = document.createElement("iframe");
+			frame.src = src;
+			frame.width = "100%";
+			frame.height = "620";
+			frame.setAttribute("frameborder", "0");
+			frame.setAttribute("allowfullscreen", "true");
+			frame.loading = "lazy";
+			grid.appendChild(frame);
+		}
+	};
+
+	const renderInstagram = (container, urls = []) => {
+		if (!container) return;
+		const grid = container.querySelector(".feed-grid");
+		if (!grid) return;
+		for (const url of urls) {
+			const src = instagramEmbedSrcFromUrl(url);
+			if (!src) continue;
+			const frame = document.createElement("iframe");
+			frame.src = src;
+			frame.width = "100%";
+			frame.height = "540";
+			frame.setAttribute("frameborder", "0");
+			frame.loading = "lazy";
+			grid.appendChild(frame);
+		}
+	};
+
+	const initFeeds = async () => {
+		const config = await loadFeedsConfig();
+		if (!config) return;
+		const liSection = document.querySelector('[data-linkedin-feed]');
+		if (liSection) {
+			const key = liSection.getAttribute('data-linkedin-feed') || 'home';
+			const posts = config.linkedinEmbeds?.[key] || [];
+			renderLinkedIn(liSection, posts);
+		}
+		for (const instaSection of document.querySelectorAll('[data-instagram-feed]')) {
+			const key = instaSection.getAttribute('data-instagram-feed');
+			const posts = key ? (config.instagramPosts?.[key] || []) : [];
+			renderInstagram(instaSection, posts);
+		}
+	};
+*** End Patch
 	const year = document.getElementById("year");
 	if (year) year.textContent = String(new Date().getFullYear());
 
@@ -382,6 +459,9 @@ onReady(() => {
 	window.addEventListener("scroll", requestScrollUpdate, { passive: true });
 	window.addEventListener("resize", requestScrollUpdate, { passive: true });
 	requestScrollUpdate();
+
+	// Initialize feeds after layout variables are set
+	onIdle(() => { initFeeds(); });
 
 	// Hover/pointer effects (defer to idle to reduce initial load work)
 	onIdle(() => {

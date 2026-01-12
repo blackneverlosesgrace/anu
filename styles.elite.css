@@ -754,6 +754,19 @@ main > .hero:first-child {
 	padding: 72px 0;
 }
 
+/* Feeds */
+.feed-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 12px;
+}
+.feed-grid iframe {
+	width: 100%;
+	border: 1px solid var(--hair);
+	border-radius: 16px;
+	background: rgba(255, 255, 255, 0.02);
+}
+
 /* Prevent oversized gaps between stacked sections */
 main > .hero + .section {
 	padding-top: 56px;

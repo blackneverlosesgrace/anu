@@ -1,0 +1,30 @@
+{
+  "linkedinEmbeds": {
+    "home": [
+      "https://www.linkedin.com/embed/feed/update/urn:li:activity:YOUR_ACTIVITY_ID"
+    ]
+  },
+  "instagramPosts": {
+    "adxninja": [
+      "https://www.instagram.com/p/POST_SHORTCODE/"
+    ],
+    "hirehatchpro": [
+      "https://www.instagram.com/p/POST_SHORTCODE/"
+    ],
+    "hoteldripinn": [
+      "https://www.instagram.com/p/POST_SHORTCODE/"
+    ],
+    "owlcafe": [
+      "https://www.instagram.com/p/POST_SHORTCODE/"
+    ],
+    "sqftlife": [
+      "https://www.instagram.com/p/POST_SHORTCODE/"
+    ],
+    "tapmusx": [
+      "https://www.instagram.com/p/POST_SHORTCODE/"
+    ],
+    "univise": [
+      "https://www.instagram.com/p/POST_SHORTCODE/"
+    ]
+  }
+}
