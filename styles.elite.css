@@ -1037,6 +1037,11 @@ main > .section:last-child {
 .footer {
 	padding: 26px 0 46px;
 	color: rgba(255, 255, 255, 0.62);
+	position: relative;
+	z-index: 10;
+	opacity: 1 !important;
+	transform: none !important;
+	filter: none !important;
 }
 
 .footer__inner {
