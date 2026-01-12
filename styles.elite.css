@@ -256,6 +256,30 @@ a {
 	padding: 14px 0;
 }
 
+/* Center nav on desktop while keeping brand left and CTA right */
+@media (min-width: 960px) {
+	.top__inner {
+		display: grid;
+		grid-template-columns: auto 1fr auto;
+		align-items: center;
+	}
+
+	.top__inner .brand {
+		margin-right: 0;
+	}
+
+	.top__inner .nav {
+		display: flex;
+		justify-content: center;
+		gap: 18px;
+		margin: 0 auto;
+	}
+
+	.top__inner .button {
+		margin-left: auto;
+	}
+}
+
 .top__progress {
 	height: 2px;
 	width: 100%;
