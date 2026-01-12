@@ -169,10 +169,24 @@ onReady(() => {
 		
 		if (!handle) return;
 		
-		const msg = document.createElement("p");
-		msg.style.cssText = "color: rgba(255,255,255,0.6); grid-column: 1/-1;";
-		msg.innerHTML = `Follow us on Instagram: <a href="https://www.instagram.com/${handle}/" target="_blank" rel="noopener" style="color: var(--b); text-decoration: underline;">@${handle}</a>`;
-		grid.appendChild(msg);
+		const wrapper = document.createElement("div");
+		wrapper.style.cssText = "display: flex; align-items: center; gap: 12px; justify-content: center; flex-wrap: wrap;";
+		
+		const text = document.createElement("span");
+		text.textContent = "Follow us on Instagram";
+		text.style.cssText = "color: rgba(255,255,255,0.7); font-size: 14px;";
+		
+		const btn = document.createElement("a");
+		btn.href = `https://www.instagram.com/${handle}/`;
+		btn.target = "_blank";
+		btn.rel = "noopener noreferrer";
+		btn.className = "button button--ghost";
+		btn.setAttribute("data-magnetic", "");
+		btn.innerHTML = `<span>@${handle}</span><span class="button__icon" aria-hidden="true">↗</span>`;
+		
+		wrapper.appendChild(text);
+		wrapper.appendChild(btn);
+		grid.appendChild(wrapper);
 	};
 
 	const initFeeds = async () => {

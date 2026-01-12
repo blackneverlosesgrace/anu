@@ -236,7 +236,7 @@ a {
 	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 	transition: opacity 260ms var(--ease-out), transform 260ms var(--ease-out),
 		max-height 260ms var(--ease-out);
-	will-change: opacity, transform;
+	will-change: auto;
 }
 
 .top.is-hidden {
