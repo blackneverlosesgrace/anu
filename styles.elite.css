@@ -927,6 +927,19 @@ main > .section:last-child {
 	gap: 12px;
 }
 
+.cards--centered {
+	justify-items: center;
+}
+
+.cards--centered .card {
+	justify-content: center;
+	text-align: center;
+}
+
+.cards--centered .card__body {
+	text-align: center;
+}
+
 .card {
 	--rx: 0deg;
 	--ry: 0deg;
