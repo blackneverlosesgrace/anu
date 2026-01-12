@@ -260,8 +260,9 @@ a {
 @media (min-width: 960px) {
 	.top__inner {
 		display: grid;
-		grid-template-columns: auto 1fr auto;
+		grid-template-columns: auto 1fr auto auto;
 		align-items: center;
+		column-gap: 16px;
 	}
 
 	.top__inner .brand {
@@ -277,6 +278,12 @@ a {
 
 	.top__inner .button {
 		margin-left: auto;
+	}
+
+	.top__inner .lite-toggle {
+		padding: 10px 12px;
+		font-size: 13px;
+		white-space: nowrap;
 	}
 }
 
