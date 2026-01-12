@@ -352,6 +352,7 @@ a {
 	appearance: none;
 	-webkit-appearance: none;
 	font: inherit;
+	font-size: 14px;
 	color: var(--ink);
 	cursor: pointer;
 	display: inline-flex;
