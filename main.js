@@ -169,63 +169,10 @@ onReady(() => {
 		
 		if (!handle) return;
 		
-		// Create Instagram feed widget showing recent posts
-		const widget = document.createElement("div");
-		widget.className = "instagram-widget";
-		widget.style.cssText = "grid-column: 1/-1; width: 100%;";
-		
-		const postsToShow = 6;
-		const feedGrid = document.createElement("div");
-		feedGrid.style.cssText = "display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;";
-		
-		for (let i = 0; i < postsToShow; i++) {
-			const postBox = document.createElement("a");
-			postBox.href = `https://www.instagram.com/${handle}/`;
-			postBox.target = "_blank";
-			postBox.rel = "noopener noreferrer";
-			postBox.className = "insta-placeholder";
-			postBox.style.cssText = `
-				aspect-ratio: 1;
-				background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(34, 211, 238, 0.1));
-				border: 1px solid var(--hair);
-				border-radius: 12px;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				color: rgba(255, 255, 255, 0.4);
-				font-size: 14px;
-				transition: all 0.3s;
-				text-decoration: none;
-			`;
-			postBox.innerHTML = `<span style="opacity: 0.6;">📷</span>`;
-			
-			postBox.addEventListener('mouseenter', () => {
-				postBox.style.borderColor = 'var(--b)';
-				postBox.style.transform = 'scale(1.02)';
-			});
-			postBox.addEventListener('mouseleave', () => {
-				postBox.style.borderColor = 'var(--hair)';
-				postBox.style.transform = 'scale(1)';
-			});
-			
-			feedGrid.appendChild(postBox);
-		}
-		
-		const note = document.createElement("p");
-		note.style.cssText = "color: rgba(255,255,255,0.6); margin-top: 16px; text-align: center; grid-column: 1/-1;";
-		note.innerHTML = `View latest posts on <a href="https://www.instagram.com/${handle}/" target="_blank" rel="noopener" style="color: var(--b); text-decoration: underline;">@${handle}</a>`;
-		
-		widget.appendChild(feedGrid);
-		widget.appendChild(note);
-		grid.appendChild(widget);
-		
-		// Load Instagram embed script
-		if (!document.querySelector('script[src*="instagram.com/embed.js"]')) {
-			const script = document.createElement('script');
-			script.async = true;
-			script.src = 'https://www.instagram.com/embed.js';
-			document.body.appendChild(script);
-		}
+		const msg = document.createElement("p");
+		msg.style.cssText = "color: rgba(255,255,255,0.6); grid-column: 1/-1;";
+		msg.innerHTML = `Follow us on Instagram: <a href="https://www.instagram.com/${handle}/" target="_blank" rel="noopener" style="color: var(--b); text-decoration: underline;">@${handle}</a>`;
+		grid.appendChild(msg);
 	};
 
 	const initFeeds = async () => {
