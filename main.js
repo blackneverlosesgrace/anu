@@ -357,47 +357,17 @@ onReady(() => {
 	// Scroll progress + scroll-speed blur (run work on rAF; avoid continuous loops)
 	let lastScrollY = window.scrollY;
 
-	const enableParallax = !prefersReducedMotion && !isLiteMode;
+	// Disable parallax to improve performance
+	const enableParallax = false;
 	const visibleParallaxItems = new Set();
 	const allParallaxItems = Array.from(document.querySelectorAll("[data-parallax]"));
-	if (enableParallax && "IntersectionObserver" in window) {
-		const parallaxIo = new IntersectionObserver(
-			(entries) => {
-				for (const entry of entries) {
-					if (entry.isIntersecting) visibleParallaxItems.add(entry.target);
-					else visibleParallaxItems.delete(entry.target);
-				}
-			},
-			{ root: null, threshold: 0, rootMargin: "15% 0px 15% 0px" }
-		);
-		for (const el of allParallaxItems) {
-			const factor = Number(el.getAttribute("data-parallax") || "0") || 0;
-			if (factor <= 0) continue;
-			parallaxIo.observe(el);
-		}
-	} else if (enableParallax) {
-		for (const el of allParallaxItems) {
-			visibleParallaxItems.add(el);
-		}
-	}
 
 	let parallaxRaf = 0;
 	const updateParallax = () => {
-		parallaxRaf = 0;
-		for (const el of visibleParallaxItems) {
-			const factor = Number(el.getAttribute("data-parallax") || "0") || 0;
-			if (factor <= 0) continue;
-			const r = el.getBoundingClientRect();
-			const center = r.top + r.height / 2;
-			const dist = (center - window.innerHeight / 2) / window.innerHeight;
-			const px = clamp(-dist * factor * 110, -34, 34);
-			el.style.setProperty("--parY", `${px.toFixed(2)}px`);
-		}
+		// Disabled for performance
 	};
 	const requestParallax = () => {
-		if (!enableParallax) return;
-		if (parallaxRaf) return;
-		parallaxRaf = requestAnimationFrame(updateParallax);
+		// Disabled for performance
 	};
 
 	let scrollRaf = 0;
@@ -433,12 +403,9 @@ onReady(() => {
 		const heroSkew = clamp(-6 + heroDrift * 6, -6, 1);
 
 		root.style.setProperty("--scroll", String(progress));
-		root.style.setProperty(
-			"--scrollBlur",
-			prefersReducedMotion || isLiteMode ? "0px" : `${blurPx.toFixed(2)}px`
-		);
-		root.style.setProperty("--heroWordmarkY", `${heroY.toFixed(2)}px`);
-		root.style.setProperty("--heroWordmarkSkew", `${heroSkew.toFixed(2)}deg`);
+		root.style.setProperty("--scrollBlur", "0px");
+		root.style.setProperty("--heroWordmarkY", "0px");
+		root.style.setProperty("--heroWordmarkSkew", "0deg");
 		requestParallax();
 	};
 	const requestScrollUpdate = () => {
