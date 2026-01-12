@@ -198,7 +198,7 @@ onReady(() => {
 			renderInstagram(instaSection, posts, handle);
 		}
 	};
-*** End Patch
+
 	const year = document.getElementById("year");
 	if (year) year.textContent = String(new Date().getFullYear());
 
