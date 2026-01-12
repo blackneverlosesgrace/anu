@@ -162,28 +162,19 @@ onReady(() => {
 		return null;
 	};
 
-	const renderLinkedIn = (container, embedSrcs = []) => {
+	const renderInstagram = (container, urls = [], handle = "") => {
 		if (!container) return;
 		const grid = container.querySelector(".feed-grid");
-		if (!grid) return;
-		for (const src of embedSrcs) {
-			if (!src) continue;
-			const frame = document.createElement("iframe");
-			frame.src = src;
-			frame.width = "100%";
-			frame.height = "620";
-			frame.setAttribute("frameborder", "0");
-			frame.setAttribute("allowfullscreen", "true");
-			frame.loading = "lazy";
-			grid.appendChild(frame);
+		if (!grid) return;		
+		if (urls.length === 0 && handle) {
+			// Show profile link when no posts are provided
+			const msg = document.createElement("p");
+			msg.style.cssText = "color: rgba(255,255,255,0.6); grid-column: 1/-1;";
+			msg.innerHTML = `Follow us on Instagram: <a href="https://www.instagram.com/${handle}/" target="_blank" rel="noopener" style="color: var(--b); text-decoration: underline;">@${handle}</a>`;
+			grid.appendChild(msg);
+			return;
 		}
-	};
-
-	const renderInstagram = (container, urls = []) => {
-		if (!container) return;
-		const grid = container.querySelector(".feed-grid");
-		if (!grid) return;
-		for (const url of urls) {
+				for (const url of urls) {
 			const src = instagramEmbedSrcFromUrl(url);
 			if (!src) continue;
 			const frame = document.createElement("iframe");
@@ -199,16 +190,12 @@ onReady(() => {
 	const initFeeds = async () => {
 		const config = await loadFeedsConfig();
 		if (!config) return;
-		const liSection = document.querySelector('[data-linkedin-feed]');
-		if (liSection) {
-			const key = liSection.getAttribute('data-linkedin-feed') || 'home';
-			const posts = config.linkedinEmbeds?.[key] || [];
-			renderLinkedIn(liSection, posts);
-		}
 		for (const instaSection of document.querySelectorAll('[data-instagram-feed]')) {
 			const key = instaSection.getAttribute('data-instagram-feed');
-			const posts = key ? (config.instagramPosts?.[key] || []) : [];
-			renderInstagram(instaSection, posts);
+			if (!key) continue;
+			const posts = config.instagramPosts?.[key] || [];
+			const handle = config.instagramProfiles?.[key] || "";
+			renderInstagram(instaSection, posts, handle);
 		}
 	};
 *** End Patch
